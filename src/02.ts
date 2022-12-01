@@ -1,5 +1,5 @@
-// import { testInput as input } from "./01-input";
-import { input } from "./01-input";
+// import { testInput as input } from "./02-input";
+import { input } from "./02-input";
 
 export function doIt() {
   const parsed = input.split(`\n`).map(
