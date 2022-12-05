@@ -20,29 +20,26 @@ export function doIt() {
     .split("\n")
     .map((o) => o.split(" "))
     .map((l) => ({ count: +l[1], from: +l[3] - 1, to: +l[5] - 1 }));
+
   const plan1 = deepCopy(plan);
   ops.forEach((o) => {
-    for (let i = 0; i < o.count; i++) {
-      const x = plan1[o.from].pop()!;
-      plan1[o.to].push(x);
-    }
-  });
-  const first = plan1.map((s) => s[s.length - 1]).join("");
-  //   console.log(plan);
-  const plan2 = deepCopy(plan);
-  ops.forEach((o) => {
-    const y: string[] = [];
-    for (let i = 0; i < o.count; i++) {
-      const x = plan2[o.from].pop()!;
-      y.unshift(x);
-    }
-    plan2[o.to].push(...y);
+    const toMove = plan1[o.from].splice(plan1[o.from].length - o.count);
+    plan1[o.to].push(...toMove.reverse());
   });
 
-  const second = plan2.map((s) => s[s.length - 1]).join("");
-  console.log(first, second);
+  const plan2 = deepCopy(plan);
+  ops.forEach((o) => {
+    const toMove = plan2[o.from].splice(plan2[o.from].length - o.count);
+    plan2[o.to].push(...toMove);
+  });
+
+  console.log(getTop(plan1), getTop(plan2));
 }
 
 function deepCopy<T>(plan: T[][]) {
   return [...plan.map((s) => [...s])];
+}
+
+function getTop(plan: string[][]) {
+  return plan.map((s) => s[s.length - 1]).join("");
 }
