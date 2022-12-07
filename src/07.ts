@@ -15,16 +15,11 @@ export function doIt() {
   const dirs = [root];
   parsed.forEach((line) => {
     if (line[0] === "$") {
-      switch (line[1]) {
-        case "cd": {
-          if (line[2] == "/") {
-            current = root;
-          } else {
-            current = current.dirs[line[2]];
-          }
-          break;
-        }
-        case "ls": {
+      if (line[1] === "cd") {
+        if (line[2] == "/") {
+          current = root;
+        } else {
+          current = current.dirs[line[2]];
         }
       }
     } else {
@@ -44,11 +39,9 @@ export function doIt() {
       Object.values(dir.files).reduce(sum, 0) +
       Object.keys(dir.dirs)
         .filter((k) => k !== "..")
-        .map((k) => dir.dirs[k])
-        .map((d) => d.size!)
+        .map((k) => dir.dirs[k].size!)
         .reduce(sum, 0);
   }
-  console.log(dirs);
   const first = dirs
     .filter((d) => d.size! < 100000)
     .map((d) => d.size!)
