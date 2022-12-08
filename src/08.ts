@@ -5,7 +5,6 @@ export function doIt() {
   const parsed = input.split(`\n`).map((line) => line.split("").map((t) => +t));
   let visible = 0;
   let maxScore = 0;
-  console.log(parsed);
   for (let y = 0; y < parsed.length; y++) {
     const line = parsed[y];
     for (let x = 0; x < line.length; x++) {
@@ -30,7 +29,6 @@ export function doIt() {
         false
       );
       const score = s1 * s2 * s3 * s4;
-      console.log(current, x, y, score, s1, s2, s3, s4);
       maxScore = Math.max(maxScore, score);
     }
   }
