@@ -10,3 +10,10 @@ export function splitToGroupsOf<T>(a: T[], n: number): T[][] {
   }
   return groups;
 }
+
+export function prefillArray<T>(
+  length: number,
+  getItem: (idx: number) => T
+): T[] {
+  return Array.from({ length }, (_, idx) => getItem(idx));
+}
