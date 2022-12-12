@@ -14,33 +14,32 @@ export function doIt() {
   );
   let start = "";
   let target = "";
-  let heights: number[][] = prefillArray(parsed.length, () => []);
+  const heights: number[][] = prefillArray(parsed.length, () => []);
+  const as: string[] = [];
   parsed.forEach((l, y) =>
     l.forEach((ch, x) => {
       const posS = posToString({ x, y });
       if (ch === "S") {
         start = posS;
         heights[y][x] = 0;
+        as.push(posS);
       } else if (ch === "E") {
         target = posS;
         heights[y][x] = "z".charCodeAt(0) - "a".charCodeAt(0);
       } else {
         heights[y][x] = ch.charCodeAt(0) - "a".charCodeAt(0);
+        if (ch === "a") as.push(posS);
       }
     })
   );
-  //   console.log(heights);
-  const paths = new Map<string, string[]>([[start, []]]);
-  const unresolved = [start];
-  heights.forEach((l, y) =>
-    l.forEach((h, x) => {
-      if (h === 0) {
-        const pS = posToString({ x, y });
-        unresolved.push(pS);
-        paths.set(pS, []);
-      }
-    })
-  );
+  const first = solve(heights, [start], target);
+  const second = solve(heights, as, target);
+  console.log(first, second);
+}
+
+function solve(heights: number[][], starts: string[], target: string) {
+  const unresolved = [...starts];
+  const paths = new Map<string, string[]>(starts.map((s) => [s, []]));
   while (true) {
     const cS = unresolved.shift();
     if (cS === undefined) break;
@@ -57,7 +56,5 @@ export function doIt() {
     });
     if (paths.has(target)) break;
   }
-  const first = paths.get(target)?.length;
-  const second = parsed.length;
-  console.log(first, second);
+  return paths.get(target)?.length;
 }
