@@ -27,12 +27,12 @@ export function doIt() {
         if (end === undefined) return;
         const dX = end.x - start.x;
         const dY = end.y - start.y;
-        const max = Math.max(Math.abs(dX), Math.abs(dY));
-        for (let i = 1; i <= max; i++) {
+        const distance = Math.max(Math.abs(dX), Math.abs(dY));
+        for (let i = 1; i <= distance; i++) {
           cave.set(
             posToString({
-              x: start.x + (i * dX) / max,
-              y: start.y + (i * dY) / max,
+              x: start.x + (i * dX) / distance,
+              y: start.y + (i * dY) / distance,
             }),
             Tile.Rock
           );
@@ -41,10 +41,9 @@ export function doIt() {
       }
     }
   });
-  let didNotFall = true;
-  let sand = 0;
-  let first = 0;
-  while (didNotFall) {
+  let sandCount = 0;
+  let first: number | undefined = undefined;
+  while (true) {
     let current = { x: 500, y: 0 };
     if (cave.has(posToString(current))) break;
     while (true) {
@@ -62,24 +61,19 @@ export function doIt() {
         current.y++;
       } else {
         cave.set(posToString(current), Tile.Sand);
-        sand++;
+        sandCount++;
         break;
       }
       if (current.y > maxY) {
-        if (first === 0) {
-          first = sand;
+        if (first === undefined) {
+          first = sandCount;
         }
-        if (cave.has(posToString(current))) {
-          didNotFall = false;
-          break;
-        } else {
-          cave.set(posToString(current), Tile.Sand);
-          sand++;
-          break;
-        }
+        cave.set(posToString(current), Tile.Sand);
+        sandCount++;
+        break;
       }
     }
   }
-  const second = sand;
+  const second = sandCount;
   console.log(first, second);
 }
