@@ -1,6 +1,9 @@
 // import { testInput as input } from "./16-input";
 import { input } from "./16-input";
 
+// disclaimer: this can give the correct answer given enough time but is far from
+// something that can be called solution
+
 interface Tile {
   name: string;
   rate: number;
@@ -14,7 +17,6 @@ export function doIt() {
       .split(", ")
       .map((to) => ({ to, price: 1 })),
   }));
-  //   console.log(parsed);
   const maze = parsed.reduce((prev, current) => {
     prev[current.name] = current;
     return prev;
@@ -28,7 +30,6 @@ export function doIt() {
     const p1 = cut.paths[0];
     const p2 = cut.paths[1];
     const dist = p1.price + p2.price;
-    // console.log(p1, p2, Object.keys(maze));
     maze[p1.to].paths = maze[p1.to].paths.map((p) =>
       p.to === cut.name ? { to: p2.to, price: dist } : p
     );
@@ -38,9 +39,6 @@ export function doIt() {
     delete maze[cut.name];
   }
   const mazeKeys = Object.keys(maze);
-  //   const targets = mazeKeys
-  //     .map((key) => maze[key])
-  //     .filter((tile) => tile.rate > 0);
   const distances: Map<string, Map<string, number>> = new Map(
     mazeKeys.map((key) => [
       key,
@@ -63,10 +61,6 @@ export function doIt() {
     }
   }
   console.log(distances);
-  //   console.log(maze);
-  //   Object.keys(maze)
-  //     .map((key) => maze[key])
-  //     .forEach((t) => console.log(t));
   const first = getFlow(maze, distances, 27, new Set(["AA"]), 0, 0, [
     { to: "AA", time: 0 },
     { to: "AA", time: 0 },
@@ -80,96 +74,7 @@ function takeS(s: string) {
   return s.substring(1);
 }
 
-// let bestTimeSolved = 0;
-// const db = new Map<string, number>();
-// function serialize(
-//   currentName: string,
-//   open: Set<string>,
-//   time: number
-// ): string {
-//   return `${time};${currentName};${[...open.values()]}`;
-// }
-
-// function getFlow(
-//   maze: Record<string, Tile>,
-//   time: number,
-//   open: Set<string>,
-//   currentFlow: number,
-//   flown: number,
-//   currentName: string
-// ): number {
-//   if (time === 1) return flown + currentFlow;
-//   const state = serialize(currentName, open, time);
-//   const cached = db.get(state);
-//   if (cached !== undefined) return flown + cached;
-//   const tile = maze[currentName];
-//   //   console.log(current, tile);
-//   const next: number[] = [];
-//   if (!open.has(currentName) && tile.rate > 0) {
-//     next.push(
-//       getFlow(
-//         maze,
-//         time - 1,
-//         new Set([...open.values(), currentName]),
-//         currentFlow + tile.rate,
-//         flown + currentFlow,
-//         currentName
-//       )
-//     );
-//   }
-//   next.push(
-//     ...tile.paths.map((neighbourName) =>
-//       getFlow(
-//         maze,
-//         time - 1,
-//         open,
-//         currentFlow,
-//         flown + currentFlow,
-//         neighbourName
-//       )
-//     )
-//   );
-//   const best = Math.max(...next);
-//   if (time > bestTimeSolved) {
-//     bestTimeSolved = time;
-//     console.log(best, time, state);
-//   }
-//   db.set(state, best - flown);
-//   return best;
-// }
-
-class SuperMap<TKey, TValue> {
-  maps: Array<Map<TKey, TValue>>;
-
-  constructor() {
-    this.maps = [new Map()];
-  }
-
-  set(key: TKey, value: TValue) {
-    if (this.maps[this.maps.length - 1].size === 16777000)
-      this.maps.push(new Map());
-    return this.maps[this.maps.length - 1].set(key, value);
-  }
-
-  get(key: TKey) {
-    for (const map of this.maps) {
-      const value = map.get(key);
-      if (value !== undefined) return value;
-    }
-    return undefined;
-  }
-}
-
 let bestTimeSolved = 0;
-const db = new SuperMap<string, number[]>();
-
-function serialize(
-  pos: ITravel[],
-  open: Set<string>
-  //   time: number
-): string {
-  return `${pos.map((p) => `${p.time} ${p.to}`)};${[...open.values()]}`;
-}
 
 interface ITravel {
   to: string;
@@ -204,16 +109,8 @@ function getFlow(
 
   const currentName1 = p1.to;
   const currentName2 = p2.to;
-  //   const state = serialize([p1, p2], open);
-  //   const cached = db.get(state);
-  //   if (cached !== undefined) {
-  //     const val = cached[time];
-  //     if (val !== undefined) return flown + val;
-  //     if (cached.some((v, t) => t > time)) return 0; // we can get there sooner, ignore it
-  //   }
   const tile1 = maze[currentName1];
   const tile2 = maze[currentName2];
-  //   console.log(current, tile);
   const next1: {
     open: string[];
     flowGain: number;
@@ -327,15 +224,10 @@ function getFlow(
       )
     );
   }
-  //   console.log(next1, next2, next);
   const best = Math.max(...next);
   if (time > bestTimeSolved) {
     bestTimeSolved = time;
-    // console.log(next1, next2, next);
     console.log(best, time);
   }
-  //   const newCached = cached !== undefined ? cached : [];
-  //   newCached[time] = best - flown;
-  //   if (cached === undefined) db.set(state, newCached);
   return best;
 }
