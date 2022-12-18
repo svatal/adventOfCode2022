@@ -1,4 +1,6 @@
 import * as fs from "fs";
+import * as cp from "child_process";
+
 const index = fs.readFileSync("./src/index.ts", "utf-8");
 const firstLine = index.split("\n")[0];
 const start = firstLine.indexOf("./") + 2;
@@ -19,5 +21,8 @@ fs.writeFileSync(`./src/${next}.ts`, template2);
 console.log("updating index.ts");
 const index2 = index.replace(actual, next);
 fs.writeFileSync(`./src/index.ts`, index2);
+
+console.log("opening the new files");
+cp.execSync(`code ./src/${next}-input.ts ./src/${next}.ts`);
 
 console.log("done!");
