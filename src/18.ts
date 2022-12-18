@@ -1,6 +1,13 @@
 // import { testInput as input } from "./18-input";
 import { input } from "./18-input";
+import { neighbours6, valueInMap } from "./utils/positions3D";
 import { prefillArray, sum } from "./utils/util";
+
+enum Tile {
+  Air,
+  Lava,
+  Steam,
+}
 
 export function doIt() {
   const parsed = input
@@ -11,76 +18,50 @@ export function doIt() {
   const maxY = Math.max(...parsed.map(({ y }) => y));
   const maxX = Math.max(...parsed.map(({ x }) => x));
 
-  const map: (boolean | undefined)[][][] = prefillArray(maxZ + 1, () =>
-    prefillArray(maxY + 1, () => prefillArray(maxX + 1, () => undefined))
+  const map: Tile[][][] = prefillArray(maxZ + 1, () =>
+    prefillArray(maxY + 1, () => prefillArray(maxX + 1, () => Tile.Air))
   );
   parsed.forEach(({ x, y, z }) => {
-    map[z][y][x] = true;
+    map[z][y][x] = Tile.Lava;
   });
   const first = parsed
-    .map(({ x, y, z }) => {
-      let surface = 0;
-      surface += map[z][y][x + 1] ? 0 : 1;
-      surface += map[z][y][x - 1] ? 0 : 1;
-      surface += map[z][y + 1]?.[x] ? 0 : 1;
-      surface += map[z][y - 1]?.[x] ? 0 : 1;
-      surface += map[z + 1]?.[y]?.[x] ? 0 : 1;
-      surface += map[z - 1]?.[y]?.[x] ? 0 : 1;
-      // console.log(surface, x, y, z);
-      return surface;
-    })
+    .map(
+      (p) =>
+        neighbours6(p)
+          .map(valueInMap(map))
+          .filter((t) => t === Tile.Air || t === undefined).length
+    )
     .reduce(sum);
 
-  let airExpanded = false;
+  let steamExpanded = false;
   do {
-    airExpanded = false;
+    steamExpanded = false;
     for (let z = 0; z < map.length; z++) {
-      const slice = map[z];
-      for (let y = 0; y < slice.length; y++) {
-        const line = slice[y];
-        for (let x = 0; x < line.length; x++) {
-          const point = line[x];
-          if (point !== undefined) continue;
+      for (let y = 0; y < map[z].length; y++) {
+        for (let x = 0; x < map[z][y].length; x++) {
+          if (map[z][y][x] !== Tile.Air) continue;
           if (
-            z === 0 ||
-            z === map.length - 1 ||
-            y === 0 ||
-            y === slice.length - 1 ||
-            x === 0 ||
-            x === line.length - 1 ||
-            map[z][y][x + 1] === false ||
-            map[z][y][x - 1] === false ||
-            map[z][y + 1]?.[x] === false ||
-            map[z][y - 1]?.[x] === false ||
-            map[z + 1]?.[y]?.[x] === false ||
-            map[z - 1]?.[y]?.[x] === false
+            [0, maxX].includes(x) ||
+            [0, maxY].includes(y) ||
+            [0, maxZ].includes(z) ||
+            neighbours6({ x, y, z })
+              .map(valueInMap(map))
+              .some((t) => t === Tile.Steam || t === undefined)
           ) {
-            line[x] = false;
-            airExpanded = true;
+            map[z][y][x] = Tile.Steam;
+            steamExpanded = true;
           }
         }
       }
     }
-  } while (airExpanded);
-  let second = first;
-  for (let z = 0; z < map.length; z++) {
-    const slice = map[z];
-    for (let y = 0; y < slice.length; y++) {
-      const line = slice[y];
-      for (let x = 0; x < line.length; x++) {
-        const point = line[x];
-        if (point !== undefined) continue;
-        let surface = 0;
-        surface += map[z][y][x + 1] === undefined ? 0 : 1;
-        surface += map[z][y][x - 1] === undefined ? 0 : 1;
-        surface += map[z][y + 1]?.[x] === undefined ? 0 : 1;
-        surface += map[z][y - 1]?.[x] === undefined ? 0 : 1;
-        surface += map[z + 1]?.[y]?.[x] === undefined ? 0 : 1;
-        surface += map[z - 1]?.[y]?.[x] === undefined ? 0 : 1;
-        // console.log(surface, z, y, x);
-        second -= surface;
-      }
-    }
-  }
+  } while (steamExpanded);
+  const second = parsed
+    .map(
+      (p) =>
+        neighbours6(p)
+          .map(valueInMap(map))
+          .filter((t) => t === Tile.Steam || t === undefined).length
+    )
+    .reduce(sum);
   console.log(first, second);
 }
