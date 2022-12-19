@@ -9,7 +9,7 @@ doIt((...params) => {
     lastReport = t;
   }
 });
-console.log("finished in", formatTime(Date.now() - start), "ms");
+console.log("finished in", formatTime(Date.now() - start));
 
 function formatTime(ms: number) {
   return new Date(ms).toISOString().split("T")[1].split(".")[0];

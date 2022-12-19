@@ -23,7 +23,7 @@ export function doIt(progress: (...params: any[]) => void) {
   let first = 0;
   for (let bi = 0; bi < blueprints.length; bi++) {
     const b = blueprints[bi];
-    const geodes = pickRobot(b, { ore: 1 }, {}, getMax(b), 32);
+    const geodes = pickRobot(b, { ore: 1 }, {}, getMax(b), 24);
     first += b.id * geodes;
   }
   let second = 1;
@@ -52,43 +52,34 @@ export function doIt(progress: (...params: any[]) => void) {
 
   function pickRobot(
     b: typeof blueprints[number],
-    robots: Record<string, number>,
-    inventory: Record<string, number>,
+    initRobots: Record<string, number>,
+    initInventory: Record<string, number>,
     max: Record<string, number>,
-    minutesLeft: number
-  ) {
-    const rs = b.types.map((robot) =>
-      createRobot(robot, b, robots, inventory, max, minutesLeft)
-    );
-    return Math.max(...rs);
-  }
-
-  function createRobot(
-    r: typeof blueprints[number]["types"][number],
-    b: typeof blueprints[number],
-    robots: Record<string, number>,
-    inventory: Record<string, number>,
-    max: Record<string, number>,
-    minutesLeft: number
+    initMinutesLeft: number
   ): number {
-    if (r.ingredients.some((i) => !robots[i.ingredient])) return 0; // unable to create, pick another robot
-    if (robots[r.type] >= max[r.type]) return 0; // we dont need another one
-    inventory = { ...inventory };
-    robots = { ...robots };
-    while (minutesLeft-- > 0) {
-      const can = r.ingredients.every(
-        (i) => inventory[i.ingredient] >= i.count
-      );
-      Object.keys(robots).forEach(
-        (type) => (inventory[type] = (inventory[type] || 0) + robots[type])
-      );
-      if (can) {
-        robots[r.type] = (robots[r.type] || 0) + 1;
-        r.ingredients.forEach((i) => (inventory[i.ingredient] -= i.count));
-        return pickRobot(b, robots, inventory, max, minutesLeft);
+    const rs = b.types.map((r) => {
+      if (r.ingredients.some((i) => !initRobots[i.ingredient])) return 0; // unable to create, pick another robot
+      if (initRobots[r.type] >= max[r.type]) return 0; // we dont need another one
+      if (initInventory[r.type] >= 2 * max[r.type]) return 0; // enough suplies
+      const inventory = { ...initInventory };
+      const robots = { ...initRobots };
+      let minutesLeft = initMinutesLeft;
+      while (minutesLeft-- > 0) {
+        const can = r.ingredients.every(
+          (i) => inventory[i.ingredient] >= i.count
+        );
+        Object.keys(robots).forEach(
+          (type) => (inventory[type] = (inventory[type] || 0) + robots[type])
+        );
+        if (can) {
+          robots[r.type] = (robots[r.type] || 0) + 1;
+          r.ingredients.forEach((i) => (inventory[i.ingredient] -= i.count));
+          return pickRobot(b, robots, inventory, max, minutesLeft);
+        }
       }
-    }
-    progress(b.id, robots, inventory["geode"] ?? 0);
-    return inventory["geode"] ?? 0;
+      progress(b.id, robots, inventory["geode"] ?? 0);
+      return inventory["geode"] ?? 0;
+    });
+    return Math.max(...rs);
   }
 }
