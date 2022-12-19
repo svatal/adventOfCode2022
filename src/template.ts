@@ -1,7 +1,7 @@
 // import { testInput as input } from "./template-input";
 import { input } from "./template-input";
 
-export function doIt() {
+export function doIt(progress: (...params: any[]) => void) {
   const parsed = input.split(`\n`).map(
     (line) => line //
   );
