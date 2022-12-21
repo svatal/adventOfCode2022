@@ -17,3 +17,14 @@ export function prefillArray<T>(
 ): T[] {
   return Array.from({ length }, (_, idx) => getItem(idx));
 }
+
+export function toDictionary<T, U>(
+  arr: T[],
+  getKey: (item: T) => string,
+  getValue: (item: T) => U
+): Record<string, U> {
+  return arr.reduce((c, i) => {
+    c[getKey(i)] = getValue(i);
+    return c;
+  }, {} as Record<string, U>);
+}

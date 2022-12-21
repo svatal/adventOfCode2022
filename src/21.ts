@@ -1,5 +1,6 @@
 // import { testInput as input } from "./21-input";
 import { input } from "./21-input";
+import { toDictionary } from "./utils/util";
 
 interface IExpression {
   type: "expression";
@@ -24,13 +25,23 @@ export function doIt(progress: (...params: any[]) => void) {
       op: isNaN(+op)
         ? ({ type: "expression", args: op.split(" ") } as const)
         : ({ type: "number", num: +op } as const),
-    }))
-    .reduce((c, i) => {
-      c[i.name] = i.op;
-      return c;
-    }, {} as Record<string, INumber | IExpression | IHuman>);
+    }));
+  const first = solve(parsed);
+  const second = solve(parsed, "humn");
+  console.log(first, second);
+}
+
+function solve(
+  parsedArray: { name: string; op: IExpression | INumber }[],
+  keyToOverrideWithHuman?: string
+) {
+  const parsed = toDictionary(
+    parsedArray,
+    (i) => i.name,
+    (i) =>
+      i.name === keyToOverrideWithHuman ? ({ type: "human" } as const) : i.op
+  );
   const keys = Object.keys(parsed);
-  parsed["humn"] = { type: "human" };
   let changed = false;
   do {
     changed = false;
@@ -62,7 +73,9 @@ export function doIt(progress: (...params: any[]) => void) {
       }
     }
   } while (changed);
-  const root = parsed["root"] as IExpression;
+  const root = parsed["root"];
+  if (root.type === "number") return root.num;
+  if (root.type === "human") throw "unexpected";
   const a = parsed[root.args[0]];
   const b = parsed[root.args[2]];
   let n = a.type === "number" ? a.num : (b as INumber).num;
@@ -94,7 +107,5 @@ export function doIt(progress: (...params: any[]) => void) {
     }
     eq = eq2;
   }
-  const first = parsed["root"];
-  const second = n;
-  console.log(first, second);
+  return n;
 }
