@@ -1,44 +1,59 @@
 // import { testInput as input } from "./21-input";
 import { input } from "./21-input";
 
+interface IExpression {
+  type: "expression";
+  args: string[];
+}
+
+interface INumber {
+  type: "number";
+  num: number;
+}
+
+interface IHuman {
+  type: "human";
+}
+
 export function doIt(progress: (...params: any[]) => void) {
   const parsed = input
     .split(`\n`)
     .map((line) => line.split(": "))
     .map(([name, op]) => ({
       name,
-      op: isNaN(+op) ? op.split(" ") : +op,
+      op: isNaN(+op)
+        ? ({ type: "expression", args: op.split(" ") } as const)
+        : ({ type: "number", num: +op } as const),
     }))
     .reduce((c, i) => {
       c[i.name] = i.op;
       return c;
-    }, {} as Record<string, number | string[]>);
+    }, {} as Record<string, INumber | IExpression | IHuman>);
   const keys = Object.keys(parsed);
-  parsed["humn"] = ["?"];
+  parsed["humn"] = { type: "human" };
   let changed = false;
   do {
     changed = false;
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
       const x = parsed[key];
-      if (typeof x === "number") continue;
-      if (x[0] === "?") continue;
-      const a = parsed[x[0]];
-      const op = x[1];
-      const b = parsed[x[2]];
-      if (typeof a === "number" && typeof b === "number") {
+      if (x.type !== "expression") continue;
+      const a = parsed[x.args[0]];
+      const op = x.args[1];
+      const b = parsed[x.args[2]];
+      if (a.type === "number" && b.type === "number") {
         switch (op) {
           case "+":
-            parsed[key] = a + b;
+            parsed[key] = { type: "number", num: a.num + b.num };
             break;
           case "-":
-            parsed[key] = a - b;
+            parsed[key] = { type: "number", num: a.num - b.num };
             break;
           case "*":
-            parsed[key] = a * b;
+            parsed[key] = { type: "number", num: a.num * b.num };
             break;
           case "/":
-            parsed[key] = a / b;
+            parsed[key] = { type: "number", num: a.num / b.num };
             break;
           default:
             throw "unknown op" + op;
@@ -47,55 +62,38 @@ export function doIt(progress: (...params: any[]) => void) {
       }
     }
   } while (changed);
-  keys.forEach((k) => {
-    if (typeof parsed[k] !== "number")
-      console.log(k, "=", (parsed[k] as string[]).join(" "));
-  });
-  const root = parsed["root"] as string[];
-  const a = parsed[root[0]];
-  const b = parsed[root[2]];
-  let n = (typeof a === "number" ? a : b) as number;
-  let eq = (typeof a === "number" ? b : a) as string[];
-  while (eq[0] !== "?") {
-    const a = parsed[eq[0]];
-    const b = parsed[eq[2]];
-    const n1 = typeof a === "number" ? a : b;
-    const eq2 = typeof a === "number" ? b : a;
-    if (typeof n1 !== "number" || !Array.isArray(eq2)) {
+  const root = parsed["root"] as IExpression;
+  const a = parsed[root.args[0]];
+  const b = parsed[root.args[2]];
+  let n = a.type === "number" ? a.num : (b as INumber).num;
+  let eq = (a.type === "number" ? b : a) as IExpression | IHuman;
+  while (eq.type === "expression") {
+    const a = parsed[eq.args[0]];
+    const b = parsed[eq.args[2]];
+    const n1 = a.type === "number" ? a : b;
+    const eq2 = a.type === "number" ? b : a;
+    if (n1.type !== "number" || eq2.type === "number") {
       console.log(eq, a, b);
       throw "damn";
     }
-    switch (eq[1]) {
+    switch (eq.args[1]) {
       case "+":
-        n -= n1;
+        n -= n1.num;
         break;
       case "-":
-        if (n1 === a) n = n1 - n;
-        else n += n1;
+        if (n1 === a) n = n1.num - n;
+        else n += n1.num;
         break;
       case "*":
-        n /= n1;
+        n /= n1.num;
         break;
       case "/":
-        if (n1 === a) n = n1 / n;
-        else n *= n1;
+        if (n1 === a) n = n1.num / n;
+        else n *= n1.num;
         break;
     }
     eq = eq2;
   }
-  // while (Array.isArray(parsed["humn"])) {
-  //   for (let i = 0; i < keys.length; i++) {
-  //     const key = keys[i];
-  //     const x = parsed[key];
-  //     if (typeof x === "number") continue;
-  //     if (key === "root") {
-  //       const a = parsed[x[0]];
-  //       const b = parsed[x[2]];
-  //       const n = typeof a === "number" ? a : b;
-  //       const eq = typeof a === "number" ? b : a;
-  //     }
-  //   }
-  // }
   const first = parsed["root"];
   const second = n;
   console.log(first, second);
